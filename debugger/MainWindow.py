@@ -138,24 +138,27 @@ class MainDebugger(QtGui.QMainWindow, mainwindow_gen.Ui_MainWindow):
         '''
         if isinstance(event, ProcessAttachEvent):
             self.continueDbgEvent()
+        '''
         if isinstance(event, ThreadAttachEvent):
             self.continueDbgEvent()
-        '''
 
 def main(argv):
-    usb = UsbConnection()
+    usb = None
     dbg_handle = None
 
     if argv[1] == '--pid':
         pid = int(argv[2])
+        usb = UsbConnection()
         dbg_handle = usb.cmdAttachProcess(pid)
 
     if argv[1] == '--titleid':
         titleid = int(argv[2], 0)
+        usb = UsbConnection()
         pid = usb.cmdGetTitlePid(titleid)
         dbg_handle = usb.cmdAttachProcess(pid)
 
     elif argv[1] == '--nextlaunch':
+        usb = UsbConnection()
         usb.cmdListenForAppLaunch()
 
         pid = None

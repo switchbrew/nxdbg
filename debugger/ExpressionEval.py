@@ -30,24 +30,27 @@ class ExpressionEvaluator:
             'bp': self.cmdAddBreakpoint,
             'bc': self.cmdDelBreakpoint,
             'b': self.cmdBreakProcess,
-            'd': self.cmdHexdump
+            'd': self.cmdHexdump,
+            'ed': self.cmdWrite32,
+            'f': self.cmdFind
         }
 
     def superEvilEval(self, param):
-        try:
-            glob = {}
-            for i in range(31):
+        glob = {}
+        for i in range(31):
+            if i in X:
                 glob['x%d'%i] = X[i]
 
+        if 31 in X:
             glob['sp'] = X[31]
+        if 32 in X:
             glob['pc'] = X[32]
-            glob['poi'] = r64
-            glob['r64'] = r64
 
-            param = eval(param, glob, {})
-            return param
-        except:
-            raise Exception('Bad syntax')
+        glob['poi'] = r64
+        glob['r64'] = r64
+
+        param = eval(param, glob, {})
+        return param
 
     def superEvilEvalDoubleArg(self, param, default=None):
         param = self.superEvilEval(param)
@@ -89,6 +92,53 @@ class ExpressionEvaluator:
             return
 
         outBlack(out, ArmDisassembler.Dis(addr, buf))
+
+    def cmdFind(self, out, param):
+        pattern = self.superEvilEval(param)
+
+        buf = ''
+        try:
+            pattern = pattern.decode('hex')
+
+            found_one = False
+            addr = 0
+
+            while not found_one:
+                outBlack(out, 'Searching at 0x%x..' % addr)
+                ret = self.usb.cmdQueryMemory(self.dbg_handle, addr)
+
+                if ret['type'] == 0x10:
+                    break
+
+                if ret['perm'] & 1:
+                    for off in range(0, ret['size'], 0x1000):
+                        try:
+                            buf = self.usb.cmdReadMemory(self.dbg_handle, addr+off, 0x1000)
+                        except:
+                            outRed(out, 'Failed to read 0x%x..' % (addr+off))
+                            buf = ''
+
+                        if pattern in buf:
+                            outBlack(out, 'Found at address: 0x%x' % (addr+off+buf.find(pattern)))
+                            #found_one = True
+                            break
+
+                addr = ret['addr'] + ret['size']
+
+        except Exception, e:
+            outRed(out, 'Unknown exception: ' + str(e))
+            return
+
+        outBlack(out, 'Search finished!')
+
+    def cmdWrite32(self, out, param):
+        addr, val = self.superEvilEval(param)
+
+        try:
+            self.usb.cmdWriteMemory32(self.dbg_handle, addr, val)
+        except Exception, e:
+            outRed(out, 'Unknown exception: ' + str(e))
+            return
 
     def cmdContinue(self, out, param):
         self.parent.continueDbgEvent()

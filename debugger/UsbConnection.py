@@ -338,32 +338,3 @@ class UsbConnection():
 
         self.checkResult(resp)
         return struct.unpack('<Q', resp['data'])[0]
-
-if 0:
-    c = UsbConnection()
-    print c.cmdListProcesses()
-    h = c.cmdAttachProcess(int(sys.argv[1]))
-    print h
-
-    addr = 0
-    while 1:
-        ret = c.cmdQueryMemory(h, addr)
-        print '%08x-%08x PERM %s' % (ret['addr'], ret['addr']+ret['size'], permToString(ret['perm']))
-
-        if ret['type'] == 0x10:
-            break
-        #try:
-        #    buf = c.cmdReadMemory(h, addr, 8)
-        #    print 'Read:', buf.encode('hex')
-        #except:
-        #    print 'Failed to read'
-        addr = ret['addr'] + ret['size']
-
-    '''
-    while 1:
-        try:
-            c.cmdGetDbgEvent(h)
-        except:
-            break
-    '''
-    c.cmdDetachProcess(h)
