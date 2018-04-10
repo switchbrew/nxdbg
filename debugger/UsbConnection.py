@@ -26,6 +26,10 @@ class DebugEvent:
             return ProcessAttachEvent(header, specifics)
         if type_ == 1:
             return ThreadAttachEvent(header, specifics)
+        if type_ == 2:
+            return Unknown2Event(header, specifics)
+        if type_ == 3:
+            return ExitEvent(header, specifics)
         if type_ == 4:
             return ExceptionEvent.from_raw(header, specifics)
 
@@ -64,6 +68,23 @@ class ThreadAttachEvent(DebugEvent):
     def __repr__(self):
         return '[ThreadAttach] Tid: %u ThreadFunc: 0x%010x TlsPointer: 0x%010x' \
             % (self.thread_id_new, self.threadfunc, self.tls_ptr)
+
+class Unknown2Event(DebugEvent):
+    def __init__(self, header, specifics):
+        DebugEvent.__init__(self, header)
+
+    def __repr__(self):
+        return '[Unknown2Event]'
+
+class ExitEvent(DebugEvent):
+    def __init__(self, header, specifics):
+        DebugEvent.__init__(self, header)
+
+        exit_type = struct.unpack('<Q', specifics[:8])
+        self.exit_type = exit_type
+
+    def __repr__(self):
+        return '[ExitEvent] Type: %u' % self.exit_type
 
 # 0x10: ExceptionType
 # 0x18: FaultRegister
