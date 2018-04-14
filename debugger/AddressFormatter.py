@@ -1,6 +1,9 @@
 # Copyright 2017 plutoo
 formatterSingleton = None
 
+def getNsos():
+    return formatterSingleton.getNsos()
+
 def formatAddr(addr, pad=0):
     if formatterSingleton is None:
         return defaultFormatAddr(addr, pad)

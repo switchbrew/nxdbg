@@ -6,13 +6,13 @@ import time
 import threading
 import mainwindow_gen
 import ArmDisassembler
+import AddressFormatter
 from UsbConnection import *
 from Utils import *
 from Lazy import *
 from Playground import *
 from ExpressionEval import *
 from BreakpointManager import *
-from AddressFormatter import *
 from MemoryLayoutAdapter import *
 from ThreadListAdapter import *
 from StateLabelAdapter import *
@@ -55,7 +55,7 @@ class MainDebugger(QtGui.QMainWindow, mainwindow_gen.Ui_MainWindow):
         self.dbg_handle = dbg_handle
         self.usb_thread = UsbThread(usb, dbg_handle)
 
-        AddressFormatter(self.usb, self.dbg_handle)
+        AddressFormatter.AddressFormatter(self.usb, self.dbg_handle)
 
         self.bp_manager = BreakpointManager(self.usb, self.dbg_handle, self.treeBreakpoints)
         expr_eval = ExpressionEvaluator(self.usb, self.dbg_handle, self)
@@ -84,8 +84,14 @@ class MainDebugger(QtGui.QMainWindow, mainwindow_gen.Ui_MainWindow):
 
     def closeEvent(self, event):
         self.bp_manager.cleanup()
-        self.usb.cmdContinueDbgEvent(self.dbg_handle, 4|2|1, 0)
-        self.usb.cmdDetachProcess(self.dbg_handle)
+        try:
+            self.usb.cmdContinueDbgEvent(self.dbg_handle, 4|2|1, 0)
+        except:
+            pass
+        try:
+            self.usb.cmdDetachProcess(self.dbg_handle)
+        except:
+            pass
         event.accept()
 
     def outGrey(self, text):
@@ -135,11 +141,15 @@ class MainDebugger(QtGui.QMainWindow, mainwindow_gen.Ui_MainWindow):
             self.continueDbgEvent()
             return
 
-        '''
-        if isinstance(event, ProcessAttachEvent):
+        if isinstance(event, ProcessAttachEvent) and not self.cbxProcessAttachEvent.isChecked():
             self.continueDbgEvent()
-        '''
-        if isinstance(event, ThreadAttachEvent):
+        if isinstance(event, ThreadAttachEvent) and not self.cbxThreadAttachEvent.isChecked():
+            self.continueDbgEvent()
+        if isinstance(event, Unknown2Event) and not self.cbxUnknownEvent.isChecked():
+            self.continueDbgEvent()
+        if isinstance(event, ExitEvent) and not self.cbxExitEvent.isChecked():
+            self.continueDbgEvent()
+        if isinstance(event, ExceptionEvent) and not self.cbxExceptionEvent.isChecked():
             self.continueDbgEvent()
 
 def main(argv):
@@ -151,7 +161,7 @@ def main(argv):
         usb = UsbConnection()
         dbg_handle = usb.cmdAttachProcess(pid)
 
-    if argv[1] == '--titleid':
+    elif argv[1] == '--titleid':
         titleid = int(argv[2], 0)
         usb = UsbConnection()
         pid = usb.cmdGetTitlePid(titleid)

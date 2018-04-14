@@ -1,5 +1,5 @@
 # Copyright 2017 plutoo
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 
 def requiresContinue(event):
     return (event.flags & 1) if event else False
@@ -49,4 +49,6 @@ def memtypeToString(type_):
         return 'Unknown'
 
 def addRow(tree, *args):
-    tree.addTopLevelItems([QtGui.QTreeWidgetItem(args)])
+    item = QtGui.QTreeWidgetItem(args)
+    item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled)
+    tree.addTopLevelItems([item])

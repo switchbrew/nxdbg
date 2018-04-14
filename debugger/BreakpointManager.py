@@ -1,7 +1,7 @@
 # Copyright 2017 plutoo
 import struct
+import AddressFormatter
 from UsbConnection import *
-from AddressFormatter import *
 from Utils import *
 
 BPK_INSTRUCTION=0xD4200000
@@ -93,4 +93,4 @@ class BreakpointManager:
         self.tree.clear()
 
         for bp in self.bp:
-            addRow(self.tree, formatAddr(bp), 'SwBreakpoint')
+            addRow(self.tree, AddressFormatter.formatAddr(bp), 'SwBreakpoint')

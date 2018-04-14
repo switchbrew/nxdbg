@@ -1,9 +1,9 @@
 # Copyright 2017 plutoo
 import struct
+import AddressFormatter
 from UsbConnection import *
 from Adapter import *
 from Utils import *
-from AddressFormatter import *
 
 class StackTraceAdapter(Adapter):
     def __init__(self, usb, dbg_handle, tree):
@@ -26,7 +26,7 @@ class StackTraceAdapter(Adapter):
 
                 for i in range(len(stack)/8):
                     val = struct.unpack('<Q', stack[i*8 : i*8+8])[0]
-                    addRow(self.tree, '0x%010x:   %s' % (sp + i*8, formatAddr(val, 0)))
+                    addRow(self.tree, '0x%010x:   %s' % (sp + i*8, AddressFormatter.formatAddr(val, 0)))
 
             except SwitchError:
                 addRow(self.tree, 'Access violation at sp=0x%010x' % sp)

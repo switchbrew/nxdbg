@@ -1,10 +1,10 @@
 # Copyright 2017 plutoo
 import struct
 import UsbConnection
+import AddressFormatter
 from Adapter import *
 from Utils import *
 from Lazy import *
-from AddressFormatter import *
 
 class RegistersAdapter(Adapter):
     def __init__(self, usb, dbg_handle, parent):
@@ -54,7 +54,7 @@ class RegistersAdapter(Adapter):
                 ctx = self.usb.cmdGetThreadContext(self.dbg_handle, event.thread_id, 15)
 
                 for i in range(33):
-                    self.register_lineedits[i].setText(formatAddr(struct.unpack('<Q', ctx[8*i : 8*i+8])[0], 0))
+                    self.register_lineedits[i].setText(AddressFormatter.formatAddr(struct.unpack('<Q', ctx[8*i : 8*i+8])[0], 0))
             except SwitchError:
                 pass # can fail on ThreadAttach race condition
         else:
