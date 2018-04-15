@@ -22,6 +22,12 @@ def outWhite(textOutput, text):
     textOutput.setTextColor(QtGui.QColor(0xFF, 0xFF, 0xFF))
     textOutput.append(text)
 
+class DisassemblyString:
+    def __init__(self, s):
+        self.s = s
+    def __repr__(self):
+        return '\n' + self.s
+
 class ExpressionEvaluator:
     def __init__(self, usb, dbg_handle, parent):
         self.usb = usb
@@ -68,7 +74,7 @@ class ExpressionEvaluator:
         size = 4*size
 
         buf = self.usb.cmdReadMemory(self.dbg_handle, addr, size)
-        return ArmDisassembler.Dis(addr, buf)
+        return DisassemblyString(ArmDisassembler.Dis(addr, buf))
 
     def cmdFind(self, pattern, find_max=None):
         pattern = pattern.decode('hex')
