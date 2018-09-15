@@ -154,11 +154,13 @@ DEPENDS	:=	$(OFILES:.o=.d)
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-all	:	$(OUTPUT).pfs0 $(OUTPUT).nro
+all	:	$(OUTPUT).pfs0 $(OUTPUT).nro $(OUTPUT).kip
 
 $(OUTPUT).pfs0	:	$(OUTPUT).nso
 
 $(OUTPUT).nso	:	$(OUTPUT).elf
+$(OUTPUT).kip	:	$(OUTPUT).elf
+	elf2kip $(OUTPUT).elf $(CURDIR)/../nxdbg.json $(OUTPUT).kip
 
 ifeq ($(strip $(NO_NACP)),)
 $(OUTPUT).nro	:	$(OUTPUT).elf $(OUTPUT).nacp
