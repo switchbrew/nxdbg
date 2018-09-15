@@ -124,22 +124,27 @@ typedef struct {
 } GetTitlePidResp;
 
 
-void sendUsbResponse(DebuggerResponse resp) {
+void sendUsbResponse(DebuggerResponse resp)
+{
     usbCommsWrite((void*)&resp, 8);
 
-    if (resp.LenBytes > 0)
+    if (resp.LenBytes > 0) {
         usbCommsWrite(resp.Data, resp.LenBytes);
+    }
 }
 
-int handleUsbCommand() {
+int handleUsbCommand()
+{
     DebuggerRequest r;
     DebuggerResponse resp;
     Result rc;
 
     size_t len = usbCommsRead(&r, sizeof(r));
-    if (len != sizeof(r))
+
+    if (len != sizeof(r)) {
         // USB transfer failure.
         fatalSimple(222 | (1 << 9));
+    }
 
     resp.LenBytes = 0;
     resp.Data = NULL;
@@ -160,9 +165,10 @@ int handleUsbCommand() {
         sendUsbResponse(resp);
         break;
     }
+
     case REQ_ATTACH_PROCESS: { // Cmd1
-        AttachProcessReq   req_;
-        AttachProcessResp  resp_;
+        AttachProcessReq req_;
+        AttachProcessResp resp_;
         usbCommsRead(&req_, sizeof(req_));
 
         rc = svcDebugActiveProcess(&resp_.DbgHandle, req_.Pid);
@@ -189,8 +195,8 @@ int handleUsbCommand() {
     }
 
     case REQ_QUERYMEMORY: { // Cmd3
-        QueryMemoryReq   req_;
-        QueryMemoryResp  resp_;
+        QueryMemoryReq req_;
+        QueryMemoryResp resp_;
         usbCommsRead(&req_, sizeof(req_));
 
         MemoryInfo info;
@@ -213,8 +219,8 @@ int handleUsbCommand() {
     }
 
     case REQ_GET_DBGEVENT: { // Cmd4
-        GetDbgEventReq   req_;
-        GetDbgEventResp  resp_;
+        GetDbgEventReq req_;
+        GetDbgEventResp resp_;
         usbCommsRead(&req_, sizeof(req_));
 
         rc = svcGetDebugEvent(&resp_.Event[0], req_.DbgHandle);
@@ -254,7 +260,20 @@ int handleUsbCommand() {
         ContinueDbgEventReq req_;
         usbCommsRead(&req_, sizeof(req_));
 
-        rc = svcContinueDebugEvent(req_.DbgHandle, req_.Flags, req_.ThreadId);
+        if (kernelAbove300()) {
+            u32 flags = 4; // ContinueDebugFlags_Resume
+
+            if (req_.Flags & 4) {
+                rc = svcContinueDebugEvent(req_.DbgHandle, flags, NULL, 0);
+            }
+            else {
+                rc = svcContinueDebugEvent(req_.DbgHandle, flags, &req_.ThreadId, 1);
+            }
+        }
+        else {
+            rc = svcLegacyContinueDebugEvent(req_.DbgHandle, req_.Flags, req_.ThreadId);
+        }
+
         resp.Result = rc;
 
         sendUsbResponse(resp);
@@ -262,8 +281,8 @@ int handleUsbCommand() {
     }
 
     case REQ_GET_THREADCONTEXT: { // Cmd7
-        GetThreadContextReq   req_;
-        GetThreadContextResp  resp_;
+        GetThreadContextReq req_;
+        GetThreadContextResp resp_;
         usbCommsRead(&req_, sizeof(req_));
 
         rc = svcGetDebugThreadContext(&resp_.Out[0], req_.DbgHandle, req_.ThreadId, req_.Flags);
@@ -339,8 +358,8 @@ int handleUsbCommand() {
     }
 
     case REQ_GET_TITLE_PID: { // Cmd13
-        GetTitlePidReq   req_;
-        GetTitlePidResp  resp_;
+        GetTitlePidReq req_;
+        GetTitlePidResp resp_;
         usbCommsRead(&req_, sizeof(req_));
 
         rc = pmdmntGetTitlePid(&resp_.Pid, req_.TitleId);
@@ -368,13 +387,15 @@ int main(int argc, char *argv[])
     Result rc;
 
     rc = pmdmntInitialize();
-    if (rc)
+    if (rc) {
         // Failed to get PM debug interface.
         fatalSimple(222 | (6 << 9));
+    }
 
     rc = usbCommsInitialize();
-    if (rc)
+    if (rc) {
         fatalSimple(rc);
+    }
 
     while (handleUsbCommand());
 
