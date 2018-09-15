@@ -1,11 +1,11 @@
 # Copyright 2017 plutoo
 import struct
 import AddressFormatter
-from UsbConnection import *
+from Types import *
 from Adapter import *
 from Utils import *
 
-class StackTraceAdapter(Adapter):
+class AdapterStackTrace(Adapter):
     def __init__(self, usb, dbg_handle, tree):
         self.usb = usb
         self.dbg_handle = dbg_handle

@@ -1,11 +1,10 @@
 # Copyright 2017 plutoo
 import struct
-import UsbConnection
 from Adapter import *
 from Utils import *
 from Lazy import *
 
-class ViewAdapter(Adapter):
+class AdapterView(Adapter):
     def __init__(self, usb, dbg_handle, expr_eval, lineCmdView, textOutputView):
         self.usb = usb
         self.dbg_handle = dbg_handle

@@ -1,12 +1,12 @@
 # Copyright 2017 plutoo
 import struct
-import UsbConnection
 import AddressFormatter
+
 from Adapter import *
 from Utils import *
 from Lazy import *
 
-class RegistersAdapter(Adapter):
+class AdapterRegisters(Adapter):
     def __init__(self, usb, dbg_handle, parent):
         self.usb = usb
         self.dbg_handle = dbg_handle

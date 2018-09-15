@@ -1,9 +1,8 @@
 # Copyright 2017 plutoo
-import UsbConnection
 from Adapter import *
 from Utils import *
 
-class StateLabelAdapter(Adapter):
+class AdapterStateLabel(Adapter):
     def __init__(self, label):
         self.label = label
 

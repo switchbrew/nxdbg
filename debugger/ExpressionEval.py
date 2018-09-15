@@ -1,11 +1,14 @@
 # Copyright 2017 plutoo
 from PyQt4 import QtGui
+import types
+
 import ArmDisassembler
 import AddressFormatter
-from UsbConnection import *
+
+from Types import *
 from Lazy import *
 from Utils import *
-import types
+
 
 def outGrey(textOutput, text):
     if text.endswith('\n'): text=text[:-1]

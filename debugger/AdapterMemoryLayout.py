@@ -1,9 +1,8 @@
 # Copyright 2017 plutoo
-import UsbConnection
 from Adapter import *
 from Utils import *
 
-class MemoryLayoutAdapter(Adapter):
+class AdapterMemoryLayout(Adapter):
     def __init__(self, usb, dbg_handle, tree):
         self.usb = usb
         self.dbg_handle = dbg_handle

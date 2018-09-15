@@ -1,7 +1,7 @@
 # Copyright 2017 plutoo
-from UsbConnection import *
 from Utils import *
 from Lazy import *
+from Types import *
 
 BPK_INSTRUCTION=0xD4200000
 

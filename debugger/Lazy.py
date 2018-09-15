@@ -1,12 +1,9 @@
 # Copyright 2017 plutoo
-from UsbConnection import *
+from Types import *
 from Utils import *
 
 lazySingleton = None
-
 X = {}
-SP = None
-PC = None
 
 def r64(addr):
     if not lazySingleton:

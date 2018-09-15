@@ -1,26 +1,33 @@
 # Copyright 2017 plutoo
 from PyQt4 import QtGui
 from PyQt4.QtCore import QThread, SIGNAL
+
 import sys
 import time
 import threading
 import mainwindow_gen
 import ArmDisassembler
 import AddressFormatter
-from UsbConnection import *
+
+from RemoteConnection import *
+from RemoteConnectionUsb import *
+from RemoteConnectionTest import *
+
 from Utils import *
 from Lazy import *
 from Playground import *
 from ExpressionEval import *
 from BreakpointManager import *
-from MemoryLayoutAdapter import *
-from ThreadListAdapter import *
-from StateLabelAdapter import *
-from RegistersAdapter import *
-from StackTraceAdapter import *
-from ViewAdapter import *
 
-class UsbThread(QThread):
+from AdapterMemoryLayout import *
+from AdapterThreadList import *
+from AdapterStateLabel import *
+from AdapterRegisters import *
+from AdapterStackTrace import *
+from AdapterView import *
+
+
+class EventReceiveThread(QThread):
     def __init__(self, usb, dbg_handle):
         QThread.__init__(self)
         self.usb = usb
@@ -53,7 +60,7 @@ class MainDebugger(QtGui.QMainWindow, mainwindow_gen.Ui_MainWindow):
 
         self.usb = usb
         self.dbg_handle = dbg_handle
-        self.usb_thread = UsbThread(usb, dbg_handle)
+        self.usb_thread = EventReceiveThread(usb, dbg_handle)
 
         AddressFormatter.AddressFormatter(self.usb, self.dbg_handle)
 
@@ -63,14 +70,14 @@ class MainDebugger(QtGui.QMainWindow, mainwindow_gen.Ui_MainWindow):
 
         self.adapters = []
         self.adapters.append(Lazy(usb, dbg_handle))
-        self.adapters.append(MemoryLayoutAdapter(usb, dbg_handle, self.treeMemory))
-        self.adapters.append(ThreadListAdapter(self.treeThreads))
-        self.adapters.append(StateLabelAdapter(self.labelState))
-        self.adapters.append(RegistersAdapter(usb, dbg_handle, self))
-        self.adapters.append(StackTraceAdapter(usb, dbg_handle, self.treeStackTrace))
-        self.adapters.append(ViewAdapter(usb, dbg_handle, expr_eval, self.lineCmdView0, self.textOutputView0))
-        self.adapters.append(ViewAdapter(usb, dbg_handle, expr_eval, self.lineCmdView1, self.textOutputView1))
-        self.adapters.append(ViewAdapter(usb, dbg_handle, expr_eval, self.lineCmdView2, self.textOutputView2))
+        self.adapters.append(AdapterMemoryLayout(usb, dbg_handle, self.treeMemory))
+        self.adapters.append(AdapterThreadList(self.treeThreads))
+        self.adapters.append(AdapterStateLabel(self.labelState))
+        self.adapters.append(AdapterRegisters(usb, dbg_handle, self))
+        self.adapters.append(AdapterStackTrace(usb, dbg_handle, self.treeStackTrace))
+        self.adapters.append(AdapterView(usb, dbg_handle, expr_eval, self.lineCmdView0, self.textOutputView0))
+        self.adapters.append(AdapterView(usb, dbg_handle, expr_eval, self.lineCmdView1, self.textOutputView1))
+        self.adapters.append(AdapterView(usb, dbg_handle, expr_eval, self.lineCmdView2, self.textOutputView2))
         self.adapters.append(Playground(usb, dbg_handle, self))
 
         self.connect(self.usb_thread, SIGNAL('onDbgEvent(PyQt_PyObject)'), self.onDbgEvent)
@@ -154,17 +161,17 @@ def main(argv):
 
     if argv[1] == '--pid':
         pid = int(argv[2])
-        usb = UsbConnection()
+        usb = RemoteConnectionUsb()
         dbg_handle = usb.cmdAttachProcess(pid)
 
     elif argv[1] == '--titleid':
         titleid = int(argv[2], 0)
-        usb = UsbConnection()
+        usb = RemoteConnectionUsb()
         pid = usb.cmdGetTitlePid(titleid)
         dbg_handle = usb.cmdAttachProcess(pid)
 
     elif argv[1] == '--nextlaunch':
-        usb = UsbConnection()
+        usb = RemoteConnectionUsb()
         usb.cmdListenForAppLaunch()
 
         pid = None
@@ -176,6 +183,10 @@ def main(argv):
         dbg_handle = usb.cmdAttachProcess(pid)
         usb.cmdStartProcess(pid)
 
+    elif argv[1] == '--test':
+        usb = RemoteConnectionTest()
+        dbg_handle = 0
+
     else:
         print 'Usage: %s [--pid <pid>] || [--nextlaunch] || --titleid <tid>' % argv[0]
         return 0
@@ -186,7 +197,7 @@ def main(argv):
         form = MainDebugger(usb, dbg_handle)
         form.show()
         app.exec_()
-    except:
+    except Exception, e:
         usb.cmdDetachProcess(dbg_handle)
         raise
 

@@ -1,7 +1,7 @@
 # Copyright 2017 plutoo
 import struct
 import AddressFormatter
-from UsbConnection import *
+from Types import *
 from Utils import *
 
 BPK_INSTRUCTION=0xD4200000
