@@ -84,14 +84,10 @@ class MainDebugger(QtGui.QMainWindow, mainwindow_gen.Ui_MainWindow):
 
     def closeEvent(self, event):
         self.bp_manager.cleanup()
-        try:
-            self.usb.cmdContinueDbgEvent(self.dbg_handle, 4|2|1, 0)
-        except:
-            pass
-        try:
-            self.usb.cmdDetachProcess(self.dbg_handle)
-        except:
-            pass
+        try: self.usb.cmdContinueDbgEvent(self.dbg_handle, 4|2|1, 0)
+        except: pass
+        try: self.usb.cmdDetachProcess(self.dbg_handle)
+        except: pass
         event.accept()
 
     def outGrey(self, text):
@@ -182,7 +178,7 @@ def main(argv):
 
     else:
         print 'Usage: %s [--pid <pid>] || [--nextlaunch] || --titleid <tid>' % argv[0]
-        return
+        return 0
 
     try:
         app = QtGui.QApplication(argv)
@@ -193,6 +189,7 @@ def main(argv):
     except:
         usb.cmdDetachProcess(dbg_handle)
         raise
+
     return 0
 
 sys.exit(main(sys.argv))

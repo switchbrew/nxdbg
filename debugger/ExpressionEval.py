@@ -42,6 +42,7 @@ class ExpressionEvaluator:
             'bc': self.cmdDelBreakpoint,
             'b': self.cmdBreakProcess,
             'd': self.cmdHexdump,
+            'df': self.cmdDumpFile,
             'ed': self.cmdWrite32,
             'f': self.cmdFind
         }
@@ -68,7 +69,22 @@ class ExpressionEvaluator:
 
     def cmdHexdump(self, addr, size=0x100):
         buf = self.usb.cmdReadMemory(self.dbg_handle, addr, size)
-        return hexdump(buf, 16, addr)
+        return DisassemblyString(hexdump(buf, 16, addr))
+
+    def cmdDumpFile(self, file_name, addr, size=0x100):
+        pos = 0
+        f = open(file_name, 'wb')
+        rem = size
+        while pos < size:
+            chunk_size = min(rem, 0x800)
+
+            buf = self.usb.cmdReadMemory(self.dbg_handle, addr + pos, chunk_size)
+            f.write(buf)
+
+            pos += chunk_size
+            rem -= chunk_size
+
+        f.close()
 
     def cmdDisasm(self, addr, size=4):
         size = 4*size

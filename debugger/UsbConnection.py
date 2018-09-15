@@ -86,12 +86,6 @@ class ExitEvent(DebugEvent):
     def __repr__(self):
         return '[ExitEvent] Type: %u' % self.exit_type
 
-# 0x10: ExceptionType
-# 0x18: FaultRegister
-# 0x20: For Fatal/BadSvcId: ThirdInfo
-# 0x20: For BreakPoint:     ThirdInfo
-# 0x20: For UserBreak:      ThirdInfo, u64 field_38, u64 field_40
-
 class ExceptionType:
     UndefinedInstruction=0  # extra_shit = opcode
     InstructionAbort=1      # extra_shit = 0
@@ -169,7 +163,7 @@ class ExceptionBadSvcId(ExceptionEvent):
         return '[BadSvcId Tid: %u SvcId: 0x%x]'
 
 
-class UsbConnection():
+class UsbConnection:
     def __init__(self):
         self.lock = threading.Lock()
 
@@ -280,16 +274,18 @@ class UsbConnection():
         return DebugEvent.from_raw(resp['data'])
 
     def cmdReadMemory(self, handle, addr, size): # Cmd5
-        if size > 0x1000:
-            raise Exception('Chunking not implemented')
+        ret = ''
+        for pos in range(0, size, 0x1000):
+            chunk_size = min(0x1000, size-pos)
 
-        with self.lock:
-            self.write(struct.pack('<I', 5))
-            self.write(struct.pack('<IIQ', handle, size, addr))
-            resp = self.readResponse()
+            with self.lock:
+                self.write(struct.pack('<I', 5))
+                self.write(struct.pack('<IIQ', handle, chunk_size, addr))
 
-        self.checkResult(resp)
-        return resp['data']
+                ret += self.readResponse()
+                self.checkResult(resp)
+
+        return ret
 
     def cmdContinueDbgEvent(self, handle, flags, thread_id): # Cmd6
         with self.lock:
