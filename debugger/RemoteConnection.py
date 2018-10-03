@@ -3,6 +3,7 @@ import sys
 import struct
 import threading
 from Utils import *
+from Types import *
 
 class RemoteConnection:
     def __init__(self):
@@ -88,8 +89,9 @@ class RemoteConnection:
                 self.write(struct.pack('<I', 5))
                 self.write(struct.pack('<IIQ', handle, chunk_size, addr))
 
-                ret += self.readResponse()
+                resp = self.readResponse()
                 self.checkResult(resp)
+                ret += resp['data']
 
         return ret
 
