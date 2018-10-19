@@ -143,7 +143,8 @@ int handleUsbCommand()
 
     if (len != sizeof(r)) {
         // USB transfer failure.
-        fatalSimple(222 | (1 << 9));
+        //fatalSimple(222 | (1 << 9));
+        return 1;
     }
 
     resp.LenBytes = 0;
